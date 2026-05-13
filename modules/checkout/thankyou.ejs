@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thank You for Your Order</title>
+    <script src="https://kit.fontawesome.com/bba4075092.js" crossorigin="anonymous"></script>
+    <style>
+      * {
+        margin: 0; padding: 0; box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      body { background-color: #f5f5fa; padding: 20px; min-height: 100vh; }
+      .container { max-width: 1200px; margin: 0 auto; }
+      .success-container {
+        max-width: 800px; margin: 50px auto; padding: 40px;
+        background: white; border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); text-align: center;
+      }
+      .success-icon {
+        width: 80px; height: 80px; background: #27ae60; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 30px;
+      }
+      .success-icon i { color: white; font-size: 40px; }
+      .success-title { font-size: 28px; color: #2c3e50; margin-bottom: 10px; font-weight: bold; }
+      .success-subtitle { font-size: 16px; color: #7f8c8d; margin-bottom: 40px; }
+      .order-details {
+        background: #f8f9fa; border-radius: 8px; padding: 30px;
+        margin-bottom: 30px; text-align: left;
+      }
+      .order-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e9ecef;
+      }
+      .order-title { font-size: 20px; font-weight: bold; color: #2c3e50; }
+      .invoice-number {
+        font-size: 14px; color: #7f8c8d; background: white;
+        padding: 8px 16px; border-radius: 20px; border: 1px solid #dee2e6;
+      }
+      .order-item {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px;
+      }
+      .item-info { flex: 1; }
+      .item-name { font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+      .item-quantity { color: #7f8c8d; font-size: 14px; }
+      .item-price { font-weight: bold; color: #27ae60; font-size: 18px; }
+      .summary-row {
+        display: flex; justify-content: space-between; margin-bottom: 10px;
+      }
+      .summary-row.total {
+        font-weight: bold; font-size: 18px; color: #2c3e50;
+        padding-top: 10px; border-top: 2px solid #dee2e6;
+      }
+      .summary-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #dee2e6; }
+
+      .bank-payment {
+        background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
+        padding: 24px; margin-bottom: 30px; text-align: left;
+      }
+      .bank-payment-title {
+        font-size: 16px; font-weight: 600; color: #e65100;
+        margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+      }
+      .bank-info-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 0; border-bottom: 1px solid #ffe082;
+      }
+      .bank-info-row:last-child { border-bottom: none; }
+      .bank-label { color: #795548; font-size: 14px; }
+      .bank-value { font-weight: 600; color: #333; font-size: 15px; }
+      .bank-account-number {
+        font-family: 'Courier New', monospace; font-size: 20px;
+        letter-spacing: 2px; color: #e65100; font-weight: 700;
+      }
+      .deadline-box {
+        background: #fff3e0; border-radius: 8px; padding: 16px;
+        margin-top: 16px; text-align: center;
+      }
+      .deadline-label { font-size: 13px; color: #bf360c; margin-bottom: 4px; }
+      .deadline-time { font-size: 18px; font-weight: 700; color: #d84315; font-family: 'Courier New', monospace; }
+      .copy-btn {
+        background: #e65100; color: white; border: none; border-radius: 6px;
+        padding: 6px 14px; font-size: 13px; cursor: pointer; margin-left: 12px;
+        transition: background 0.2s;
+      }
+      .copy-btn:hover { background: #bf360c; }
+      .copy-btn.copied { background: #27ae60; }
+
+      .back-btn {
+        background: #3498db; color: white; padding: 12px 30px;
+        border: none; border-radius: 6px; font-size: 16px; cursor: pointer;
+        text-decoration: none; display: inline-block;
+        transition: background 0.3s ease;
+      }
+      .back-btn:hover { background: #2980b9; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="success-container">
+        <div class="success-icon">
+          <i class="fas fa-check"></i>
+        </div>
+
+        <h1 class="success-title">Terima kasih!</h1>
+        <p class="success-subtitle">Pesanan Anda telah tercatat</p>
+
+        <div class="order-details">
+          <div class="order-header">
+            <h2 class="order-title">Detail Pesanan</h2>
+            <div class="invoice-number" id="invoiceDisplay">
+              Invoice #<%= typeof invoiceNumber !== 'undefined' ? invoiceNumber : '' %>
+            </div>
+          </div>
+
+          <div class="order-item">
+            <div class="item-info">
+              <div class="item-name" id="productNameDisplay">
+                <%= typeof productName !== 'undefined' ? productName : '' %>
+              </div>
+              <div class="item-quantity">Jumlah: <span id="quantityDisplay"><%= typeof quantity !== 'undefined' ? quantity : '' %></span></div>
+            </div>
+            <div class="item-price">Rp<span id="totalDisplay"><%= typeof totalPrice !== 'undefined' ? totalPrice.toLocaleString('id-ID') : '' %></span></div>
+          </div>
+
+          <div class="summary-section">
+            <div class="summary-row">
+              <span>Subtotal:</span>
+              <span>Rp<span id="subtotalDisplay"><%= typeof subtotal !== 'undefined' ? subtotal.toLocaleString('id-ID') : '' %></span></span>
+            </div>
+            <div class="summary-row">
+              <span>Diskon:</span>
+              <span>-Rp<span id="discountDisplay"><%= typeof discount !== 'undefined' ? discount.toLocaleString('id-ID') : '' %></span></span>
+            </div>
+            <div class="summary-row total">
+              <span>Total Bayar:</span>
+              <span>Rp<span id="finalTotalDisplay"><%= typeof totalPrice !== 'undefined' ? totalPrice.toLocaleString('id-ID') : '' %></span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bank-payment" id="bankPaymentSection" style="display: none;">
+          <div class="bank-payment-title">
+            <i class="fas fa-university"></i> Pembayaran Transfer Bank
+          </div>
+          <div class="bank-info-row">
+            <span class="bank-label">Bank</span>
+            <span class="bank-value" id="bankNameDisplay">-</span>
+          </div>
+          <div class="bank-info-row">
+            <span class="bank-label">Nomor Rekening</span>
+            <span class="bank-account-number" id="bankAccountDisplay">
+              -
+              <button class="copy-btn" id="copyBankBtn" onclick="copyBankAccount()">
+                <i class="fas fa-copy"></i> Salin
+              </button>
+            </span>
+          </div>
+          <div class="bank-info-row">
+            <span class="bank-label">Atas Nama</span>
+            <span class="bank-value" id="bankOwnerDisplay">-</span>
+          </div>
+          <div class="deadline-box">
+            <div class="deadline-label">Batas Akhir Pembayaran</div>
+            <div class="deadline-time" id="deadlineDisplay">-</div>
+          </div>
+        </div>
+
+        <a href="/" class="back-btn">Kembali ke Beranda</a>
+      </div>
+    </div>
+
+    <script>
+      (function() {
+        var data = null;
+        try {
+          var stored = sessionStorage.getItem('paymentResult');
+          if (stored) data = JSON.parse(stored);
+        } catch(e) {}
+
+        if (data) {
+          document.getElementById('invoiceDisplay').textContent = 'Invoice #' + (data.invoiceNumber || '');
+          document.getElementById('productNameDisplay').textContent = data.productName || '';
+          document.getElementById('quantityDisplay').textContent = data.quantity || '';
+          document.getElementById('subtotalDisplay').textContent = (data.subtotal || 0).toLocaleString('id-ID');
+          document.getElementById('discountDisplay').textContent = (data.discount || 0).toLocaleString('id-ID');
+          document.getElementById('totalDisplay').textContent = (data.totalPrice || 0).toLocaleString('id-ID');
+          document.getElementById('finalTotalDisplay').textContent = (data.totalPrice || 0).toLocaleString('id-ID');
+
+          document.getElementById('bankNameDisplay').textContent = data.bankName || 'Bank Jago';
+          document.getElementById('bankAccountDisplay').childNodes[0].textContent = data.bankAccount || '-';
+          document.getElementById('bankOwnerDisplay').textContent = data.bankOwner || '-';
+          document.getElementById('deadlineDisplay').textContent = data.paymentDeadline || '-';
+          document.getElementById('bankPaymentSection').style.display = 'block';
+
+          sessionStorage.removeItem('paymentResult');
+        }
+      })();
+
+      function copyBankAccount() {
+        var accountEl = document.getElementById('bankAccountDisplay');
+        var accountNum = accountEl.childNodes[0].textContent.trim();
+        navigator.clipboard.writeText(accountNum).then(function() {
+          var btn = document.getElementById('copyBankBtn');
+          btn.classList.add('copied');
+          btn.innerHTML = '<i class="fas fa-check"></i> Tersalin';
+          setTimeout(function() {
+            btn.classList.remove('copied');
+            btn.innerHTML = '<i class="fas fa-copy"></i> Salin';
+          }, 2000);
+        });
+      }
+    </script>
+  </body>
+</html>

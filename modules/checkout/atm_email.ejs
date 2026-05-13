@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ATM Bersama Payment</title>
+    <script src="https://kit.fontawesome.com/bba4075092.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+    <style>
+      .atm-container {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      
+      .atm-icon {
+        width: 80px;
+        height: 80px;
+        background: #3498db;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+      }
+      
+      .atm-icon i {
+        color: white;
+        font-size: 40px;
+      }
+      
+      .atm-title {
+        font-size: 24px;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+      
+      .atm-subtitle {
+        font-size: 16px;
+        color: #7f8c8d;
+        margin-bottom: 40px;
+        line-height: 1.6;
+      }
+      
+      .form-group {
+        margin-bottom: 25px;
+        text-align: left;
+      }
+      
+      .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+      
+      .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+        box-sizing: border-box;
+      }
+      
+      .form-input:focus {
+        outline: none;
+        border-color: #3498db;
+      }
+      
+      .continue-btn {
+        background: #3498db;
+        color: white;
+        padding: 14px 32px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        width: 100%;
+      }
+      
+      .continue-btn:hover {
+        background: #2980b9;
+      }
+      
+      .continue-btn:disabled {
+        background: #bdc3c7;
+        cursor: not-allowed;
+      }
+      
+      .back-btn {
+        background: transparent;
+        color: #7f8c8d;
+        padding: 12px 24px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+      }
+      
+      .back-btn:hover {
+        border-color: #bdc3c7;
+        color: #2c3e50;
+      }
+      
+      .form-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        margin-top: 20px;
+      }
+      
+      .form-buttons .continue-btn {
+        width: auto;
+        flex: 1;
+      }
+      
+      .form-buttons .back-btn {
+        margin-top: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="atm-container">
+        <div class="atm-icon">
+          <i class="fas fa-university"></i>
+        </div>
+        
+        <h1 class="atm-title" id="pageTitle">Pembayaran ATM Bersama</h1>
+        <p class="atm-subtitle">
+          Masukkan email Anda agar kami bisa kirim nomor seri dan informasi pembayaran setelah pembelian berhasil
+        </p>
+        
+        <form id="emailForm">
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form-input"
+              placeholder="contoh@email.com"
+              required
+            />
+          </div>
+          
+          <div class="form-buttons">
+            <a href="/" class="back-btn">Kembali ke Beranda</a>
+            <button type="submit" class="continue-btn" id="continueBtn">
+              Lanjutkan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <script>
+      const emailForm = document.getElementById('emailForm');
+      const continueBtn = document.getElementById('continueBtn');
+      const emailInput = document.getElementById('email');
+      const pageTitle = document.getElementById('pageTitle');
+      
+      // Detect which payment method was selected
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentType = urlParams.get('type') || 'va'; // Default to VA
+      
+      // Update title based on payment type
+      if (paymentType === 'manual') {
+        pageTitle.textContent = 'Pembayaran Transfer Bank';
+      } else {
+        pageTitle.textContent = 'Pembayaran Virtual Account';
+      }
+      
+      emailForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = emailInput.value.trim();
+        
+        if (!email) {
+          alert('Silakan masukkan email Anda');
+          return;
+        }
+        
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          alert('Silakan masukkan email yang valid');
+          return;
+        }
+        
+        try {
+          continueBtn.textContent = 'Memproses...';
+          continueBtn.disabled = true;
+          
+          // Store email in sessionStorage for next page
+          sessionStorage.setItem('customerEmail', email);
+          
+          // Redirect based on payment type
+          if (paymentType === 'manual') {
+            window.location.href = '/atm_banks';
+          } else {
+            window.location.href = '/atm_va';
+          }
+          
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Terjadi kesalahan. Silakan coba lagi.');
+          continueBtn.textContent = 'Lanjutkan';
+          continueBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>

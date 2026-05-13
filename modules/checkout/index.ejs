@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout Page</title>
+    <script src="https://kit.fontawesome.com/bba4075092.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/assets/css/styles_index.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        Pilih Produk yang Anda Inginkan:
+        <div class="auth-buttons">
+          <% if (typeof user !== 'undefined' && user) { %>
+            <a href="/account" class="auth-btn user-btn">
+              <i class="fas fa-user"></i> <%= user.name %>
+            </a>
+          <% } else { %>
+            <a href="/login" class="auth-btn login-btn">Login</a>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- <div
+          class="pricing-card"
+          data-plan="Lisensi 1 Tahun 1 PC"
+          data-price="199000"
+          data-slug="telegram-booster-1tahun-1pc"
+        >
+          <div class="price"><span class="currency">Rp</span>199.000 / PC</div>
+          <div class="plan-title">Lisensi 1 Tahun</div>
+          <div class="plan-description">untuk 1 PC</div>
+          <div class="continue-btn">Lanjutkan</div>
+        </div> -->
+
+        <!-- <div
+          class="pricing-card"
+          data-plan="Lisensi Seumur Hidup 1 PC"
+          data-price="433000"
+        >
+          <div class="price"><span class="currency">Rp</span>433.000 / PC</div>
+          <div class="plan-title">Lisensi Seumur Hidup</div>
+          <div class="plan-description">untuk 1 PC</div>
+          <div class="continue-btn">Lanjutkan</div>
+        </div> -->
+
+        <!-- <div
+          class="pricing-card"
+          data-plan="Lisensi 1 Tahun 2 PC"
+          data-price="166000"
+          data-slug="telegram-booster-1tahun-2pc"
+        >
+          <div class="price"><span class="currency">Rp</span>166.000 / PC</div>
+          <div class="plan-title">Lisensi 1 Tahun</div>
+          <div class="plan-description">untuk 2 PC</div>
+          <div class="continue-btn">Lanjutkan</div>
+        </div> -->
+
+        <!-- <div
+          class="pricing-card"
+          data-plan="Lisensi Seumur Hidup 2 PC"
+          data-price="350000"
+        >
+          <div class="price"><span class="currency">Rp</span>350.000 / PC</div>
+          <div class="plan-title">Lisensi Seumur Hidup</div>
+          <div class="plan-description">untuk 2 PC</div>
+          <div class="continue-btn">Lanjutkan</div>
+        </div> -->
+
+        <!-- <div
+          class="pricing-card"
+          data-plan="Lisensi 1 Tahun 3 PC"
+          data-price="144000"
+          data-slug="telegram-booster-1tahun-3pc"
+        >
+          <div class="price"><span class="currency">Rp</span>144.000 / PC</div>
+          <div class="plan-title">Lisensi 1 Tahun</div>
+          <div class="plan-description">untuk 3 PC</div>
+          <div class="continue-btn">Lanjutkan</div>
+        </div> -->
+
+        <!-- <div
+          class="pricing-card"
+          data-plan="Lisensi Seumur Hidup 3 PC"
+          data-price="300000"
+        >
+          <div class="price"><span class="currency">Rp</span>300.000 / PC</div>
+          <div class="plan-title">Lisensi Seumur Hidup</div>
+          <div class="plan-description">untuk 3 PC</div>
+          <div class="continue-btn">Lanjutkan</div>
+        </div> -->
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="checkoutModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="modalTitle">
+            Telegram Booster Lisensi 1 Tahun 1 PC
+          </div>
+          <button class="close-btn" id="closeModal">&times;</button>
+        </div>
+
+        <div class="payment-container">
+          <div class="payment-form">
+            <!-- <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="quantity">QTY</label>
+                <input
+                  type="number"
+                  id="quantity"
+                  class="form-input"
+                  placeholder="1"
+                  min="1"
+                  value="1"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="cardName">Kode kupon</label>
+                <input
+                  type="text"
+                  id="cardName"
+                  class="form-input"
+                  placeholder="Isi kode kupon di sini"
+                />
+              </div>
+            </div> -->
+
+            <%
+            const currentUser = (typeof user !== 'undefined' && user) ? user : null;
+            const emailValue = currentUser ? currentUser.email : '';
+            const waValue = currentUser ? currentUser.whatsapp : '';
+            const readonlyAttr = currentUser ? 'readonly' : '';
+            %>
+            
+            <div class="form-group">
+              <label class="form-label" for="name">Nama Anda</label>
+              <input
+                type="text"
+                id="name"
+                class="form-input"
+                placeholder="Ahmad Kashmiri"
+                value="<%= currentUser && currentUser.name ? currentUser.name : '' %>"
+                <%- readonlyAttr %>
+              />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="email"
+                >E-mail untuk mengirim nomor seri</label
+              >
+              <input
+                type="email"
+                id="email"
+                class="form-input"
+                placeholder="contoh@email.com"
+                value="<%= emailValue %>"
+                <%- readonlyAttr %>
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="whatsapp"
+                >Nomor WhatsApp</label
+              >
+              <input
+                type="tel"
+                id="whatsapp"
+                class="form-input"
+                placeholder="0812-3456-7890"
+                value="<%= waValue %>"
+                <%- readonlyAttr %>
+              />
+            </div>
+
+            <!-- <div class="card-icons">
+              <div class="card-icon"><i class="fa-brands fa-cc-visa fa-xl"></i></div>
+              <div class="card-icon"><i class="fa-brands fa-cc-mastercard fa-xl"></i></div>
+            </div> -->
+
+            <!-- <div class="form-group">
+              <label class="form-label" for="cardName">Nama Pemilik Kartu</label>
+              <input
+                type="text"
+                id="cardName"
+                class="form-input"
+                placeholder="Ikan Terbang"
+                value="<%= currentUser && currentUser.name ? currentUser.name : '' %>"
+                <%- readonlyAttr %>
+              />
+            </div> -->
+
+            <!-- <div class="form-group">
+              <label class="form-label" for="cardNumber">Nomor Kartu</label>
+              <input
+                type="text"
+                id="cardNumber"
+                class="form-input"
+                placeholder="XXXX XXXX XXXX XXXX"
+              />
+            </div> -->
+
+            <!-- <div class="form-group">
+              <label class="form-label" for="expiry">Masa Berlaku</label>
+              <input
+                type="text"
+                id="expiry"
+                class="form-input"
+                placeholder="MM / YY"
+              />
+            </div> -->
+
+            <!-- <div class="form-group">
+              <label class="form-label" for="cvc">CVC</label>
+              <input
+                type="text"
+                id="cvc"
+                class="form-input"
+                placeholder="CVC"
+              />
+            </div> -->
+
+          </div>
+
+          <!-- Order Summary Section -->
+          <div class="order-summary">
+            <h3 class="summary-title">Ringkasan Pesanan</h3>
+            <div class="summary-row">
+              <div class="summary-item">
+                <label class="summary-label" for="summary-quantity">Jumlah</label>
+                <input
+                  type="number"
+                  id="summary-quantity"
+                  class="summary-input"
+                  placeholder="1"
+                  min="1"
+                  value="1"
+                />
+              </div>
+              <div class="summary-item">
+                <label class="summary-label" for="summary-coupon">Kode Kupon</label>
+                <input
+                  type="text"
+                  id="summary-coupon"
+                  class="summary-input"
+                  placeholder="Masukkan kode kupon"
+                />
+              </div>
+            </div>
+            <div class="summary-row">
+              <div class="summary-item lifetime-toggle">
+                <label class="summary-label">Tipe Lisensi</label>
+                <div class="toggle-container">
+                  <span class="toggle-label">1 Tahun</span>
+                  <label class="switch">
+                    <input type="checkbox" id="lifetime-toggle">
+                    <span class="slider"></span>
+                  </label>
+                  <span class="toggle-label">Seumur Hidup</span>
+                </div>
+              </div>
+            </div>
+            <div class="summary-total">
+              <div class="total-row">
+                <span class="total-label">Subtotal:</span>
+                <span class="total-price" id="summary-subtotal">Rp0</span>
+              </div>
+              <div class="total-row">
+                <span class="total-label">Diskon:</span>
+                <span class="total-price" id="summary-discount">-Rp0</span>
+              </div>
+              <div class="total-row final">
+                <span class="total-label">Total:</span>
+                <span class="total-price" id="summary-total">Rp0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="payment-section">
+            <div class="pm-title">Pilih Metode Pembayaran</div>
+            <div class="pm-list">
+              <div class="pm-item">
+                <img src="/assets/img/Logo-jago.svg.png" alt="Bank Jago" />
+                <span>Bank Jago</span>
+              </div>
+              <div class="pm-item">
+                <img src="/assets/img/qris_logo.png" alt="QRIS" />
+                <span>QRIS</span>
+              </div>
+              <div class="pm-item">
+                <img src="/assets/img/ATM_Bersama_logo.png" alt="ATM Bersama" />
+                <span>ATM Bersama</span>
+              </div>
+              <div class="pm-item">
+                <img src="/assets/img/ATM_Bersama_VA_logo.png" alt="ATM Bersama (VA)" />
+                <span>ATM Bersama (VA)</span>
+              </div>
+              <div class="pm-item">
+                <img src="/assets/img/dana_logo.png" alt="Dana" />
+                <span>Dana</span>
+              </div>
+              <div class="pm-item">
+                <img src="/assets/img/Gopay_logo.png" alt="Gopay" />
+                <span>Gopay</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- <button class="pay-button" id="payButton">Bayar 416000 IDR</button> -->
+        </div>
+
+        <!-- <div class="or-divider">Atau pilih metode pembayaran lainnya:</div> -->
+
+        <!-- <div class="payment-methods">
+          <div class="payment-method">VISA<br />LOCAL CARDS</div>
+          <div class="payment-method"><img src="/assets/img/paypal_logo.png" alt=""></div>
+          <div class="payment-method"><img src="/assets/img/ATM_Bersama_logo.png" alt=""></div>
+          <div class="payment-method"><img src="/assets/img/ATM_Bersama_VA_logo.png" alt="">Virtual Account</div>
+          <div class="payment-method"><img src="/assets/img/Gopay_logo.png" alt=""></div>
+          <div class="payment-method"><img src="/assets/img/shopee_logo.png" alt=""></div>
+          <div class="payment-method"><img src="/assets/img/dana_logo.png" alt=""></div>
+          <div class="payment-method"><img src="/assets/img/linkaja_logo.png" alt=""></div>
+          <div class="payment-method"><img src="/assets/img/qris_logo.png" alt=""></div>
+          <div class="payment-method"><img src="/assets/img/Indomaret_logo.png" alt=""></div>
+          <div class="payment-method"><img src="/assets/img/Alfamart_logo.png" alt=""></div>
+        </div> -->
+      </div>
+    </div>
+
+    <script src="/assets/js/main.js"></script>
+  </body>
+</html>

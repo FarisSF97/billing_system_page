@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Details - Telegram Booster</title>
+    <script src="https://kit.fontawesome.com/bba4075092.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/assets/css/styles_index.css">
+    <style>
+        .account-container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .account-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .account-header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .account-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .account-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .account-section h3 i {
+            color: #007bff;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        .info-value {
+            color: #333;
+            font-weight: 400;
+        }
+        .card-number {
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .logout-btn:hover {
+            background: #c82333;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .back-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="account-container">
+        <div class="account-header">
+            <h2>Account Details</h2>
+            <p>Welcome back, <%= user.name %>!</p>
+        </div>
+        
+        <div class="account-section">
+            <h3><i class="fas fa-user"></i> Personal Information</h3>
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value"><%= user.name %></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value"><%= user.email %></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">WhatsApp:</span>
+                <span class="info-value"><%= user.whatsapp %></span>
+            </div>
+        </div>
+        
+        <div class="account-section">
+            <h3><i class="fas fa-credit-card"></i> Payment Information</h3>
+            <% if (user.card && user.card.name) { %>
+            <div class="info-row">
+                <span class="info-label">Card Name:</span>
+                <span class="info-value"><%= user.card.name %></span>
+            </div>
+            <% if (user.card && user.card.number) { %>
+            <div class="info-row">
+                <span class="info-label">Card Number:</span>
+                <span class="info-value card-number">**** **** **** <%= user.card.number %></span>
+            </div>
+            <% } %>
+            <% if (user.card && user.card.expiry) { %>
+            <div class="info-row">
+                <span class="info-label">Expiry Date:</span>
+                <span class="info-value card-number"><%= user.card.expiry.slice(0,2) %>/<%= user.card.expiry.slice(2) %></span>
+            </div>
+            <% } %>
+            <% } else { %>
+            <div class="info-row">
+                <span class="info-label">Card:</span>
+                <span class="info-value">No card on file</span>
+            </div>
+            <% } %>
+        </div>
+        
+        <div class="account-section">
+            <h3><i class="fas fa-key"></i> Ubah Password</h3>
+            <form id="changePasswordForm">
+                <div class="info-row">
+                    <span class="info-label">Password Baru:</span>
+                    <input type="password" id="newPassword" class="info-input" placeholder="Masukkan password baru" required>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Konfirmasi:</span>
+                    <input type="password" id="confirmPassword" class="info-input" placeholder="Konfirmasi password baru" required>
+                </div>
+                <button type="submit" class="auth-btn" style="margin-top: 10px;">Simpan Password</button>
+            </form>
+            <div id="password-message" style="display: none; margin-top: 10px;"></div>
+        </div>
+        
+        <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
+        <form action="/logout" method="GET">
+            <button type="submit" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </form>
+    </div>
+    
+    <script>
+        document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const messageDiv = document.getElementById('password-message');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            if (newPassword !== confirmPassword) {
+                messageDiv.style.display = 'block';
+                messageDiv.style.color = 'red';
+                messageDiv.textContent = 'Password tidak cocok!';
+                return;
+            }
+            
+            if (newPassword.length < 4) {
+                messageDiv.style.display = 'block';
+                messageDiv.style.color = 'red';
+                messageDiv.textContent = 'Password minimal 4 karakter!';
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Menyimpan...';
+            
+            try {
+                const response = await fetch('/process_change_password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: newPassword }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    messageDiv.style.display = 'block';
+                    messageDiv.style.color = 'green';
+                    messageDiv.textContent = 'Password berhasil diubah!';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    messageDiv.style.display = 'block';
+                    messageDiv.style.color = 'red';
+                    messageDiv.textContent = data.message || 'Gagal ubah password';
+                }
+            } catch (error) {
+                messageDiv.style.display = 'block';
+                messageDiv.style.color = 'red';
+                messageDiv.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Simpan Password';
+            }
+        });
+    </script>
+</body>
+</html>

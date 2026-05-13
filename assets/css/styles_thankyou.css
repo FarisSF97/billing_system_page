@@ -1,0 +1,156 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f5f5fa;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.success-container {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: #27ae60;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 30px;
+}
+
+.success-icon i {
+  color: white;
+  font-size: 40px;
+}
+
+.success-title {
+  font-size: 28px;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.success-subtitle {
+  font-size: 16px;
+  color: #7f8c8d;
+  margin-bottom: 40px;
+}
+
+.order-details {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 30px;
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.order-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.invoice-number {
+  font-size: 14px;
+  color: #7f8c8d;
+  background: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #dee2e6;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 6px;
+}
+
+.item-info {
+  flex: 1;
+}
+
+.item-name {
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.item-quantity {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.item-price {
+  font-weight: bold;
+  color: #27ae60;
+  font-size: 18px;
+}
+
+.order-summary {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #dee2e6;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.summary-row.total {
+  font-weight: bold;
+  font-size: 18px;
+  color: #2c3e50;
+  padding-top: 10px;
+  border-top: 2px solid #dee2e6;
+}
+
+.back-btn {
+  background: #3498db;
+  color: white;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.3s ease;
+}
+
+.back-btn:hover {
+  background: #2980b9;
+}

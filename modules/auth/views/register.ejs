@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Telegram Booster</title>
+    <script src="https://kit.fontawesome.com/bba4075092.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/assets/css/styles_index.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auth-header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .auth-btn:hover {
+            background: #218838;
+        }
+        .auth-link {
+            text-align: center;
+            color: #666;
+        }
+        .auth-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .auth-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h2>Register</h2>
+            <p>Buat akun baru Anda</p>
+        </div>
+        
+        <form action="javascript:void(0)" method="POST" id="registerForm">
+            <div class="form-group">
+                <label for="name">Nama Lengkap</label>
+                <input type="text" id="name" name="name" placeholder="Budi Dani" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="contoh@email.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="whatsapp">Nomor WhatsApp</label>
+                <input type="tel" id="whatsapp" name="whatsapp" placeholder="08xxxxxxxxxx" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="********" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Konfirmasi Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="********" required>
+            </div>
+            
+            <button type="submit" class="auth-btn">Daftar</button>
+            
+            <div id="error-message" style="color: red; text-align: center; margin-top: 10px; display: none;"></div>
+        </form>
+        
+        <div class="auth-link">
+            <p>Sudah punya akun? <a href="/login">Login di sini</a></p>
+            <p><a href="/">Kembali ke halaman utama</a></p>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const whatsapp = document.getElementById('whatsapp').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorDiv = document.getElementById('error-message');
+            const submitBtn = document.querySelector('.auth-btn');
+            
+            // Clear previous errors
+            errorDiv.style.display = 'none';
+            
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Registering...';
+            
+            try {
+                const response = await fetch('/process_register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        name, 
+                        email, 
+                        whatsapp,
+                        password, 
+                        confirmPassword
+                    }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Registration successful, redirect to home
+                    window.location.href = '/';
+                } else {
+                    // Show error message
+                    errorDiv.textContent = data.message || 'Registration failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                errorDiv.textContent = 'Network error. Please make sure backend server is running on port 5100';
+                errorDiv.style.display = 'block';
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Daftar';
+            }
+        });
+    </script>
+</body>
+</html>
