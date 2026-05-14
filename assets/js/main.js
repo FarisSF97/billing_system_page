@@ -266,6 +266,13 @@ async function updateTotalPrice() {
 
   const { basePrice, displayPlan } = await fetchLifetimeProduct();
 
+  const couponCode = summaryCouponInput ? summaryCouponInput.value.trim() : '';
+  if (couponCode) {
+    await applyCoupon(couponCode);
+  } else {
+    currentDiscount = 0;
+  }
+
   const totalPrice = basePrice * quantity;
   const finalPrice = totalPrice - currentDiscount;
 
