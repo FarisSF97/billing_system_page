@@ -67,13 +67,7 @@ const processPayment = async (req, res) => {
             });
         }
         
-        const now = new Date();
-        const dateStr = now.getFullYear().toString() + 
-                       (now.getMonth() + 1).toString().padStart(2, '0') + 
-                       now.getDate().toString().padStart(2, '0');
-        const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        const orderNumber = apiResponse.data.data?.order_id || Math.floor(Math.random() * 999) + 1;
-        const invoiceNumber = `INV-${dateStr}-${randomSuffix}-${orderNumber.toString().padStart(3, '0')}`;
+        const invoiceNumber = apiResponse.data.data?.invoice || '';
         
         res.render('checkout/thankyou', {
             invoiceNumber,
@@ -158,16 +152,10 @@ const processBankPayment = async (req, res) => {
             });
         }
 
-        const now = new Date();
-        const dateStr = now.getFullYear().toString() +
-                       (now.getMonth() + 1).toString().padStart(2, '0') +
-                       now.getDate().toString().padStart(2, '0');
-        const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        const orderNumber = apiResponse.data.data?.order_id || Math.floor(Math.random() * 999) + 1;
-        const invoiceNumber = `INV-${dateStr}-${randomSuffix}-${orderNumber.toString().padStart(3, '0')}`;
+        const invoiceNumber = apiResponse.data.data?.invoice || '';
 
         // Payment deadline: 24 hours from now
-        const deadline = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const deadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
         const deadlineStr = deadline.toLocaleDateString('id-ID', {
             day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
         });
