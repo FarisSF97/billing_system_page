@@ -739,9 +739,6 @@ document.addEventListener('DOMContentLoaded', () => {
           totalPrice: finalPrice,
           isLifetime,
           paymentMethod: 'bank_jago',
-          bankName: 'Bank Jago',
-          bankAccount: '1234567890',
-          bankOwner: 'PT. Star Frost',
           kupon: couponCode
         };
 

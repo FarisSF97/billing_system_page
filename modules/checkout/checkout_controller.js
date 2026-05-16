@@ -67,18 +67,23 @@ const processPayment = async (req, res) => {
             });
         }
         
-        const invoiceNumber = apiResponse.data.data?.invoice || '';
+        const apiData = apiResponse.data.data || {};
+        const invoiceNumber = apiData.invoice || '';
+        const harga = parseInt(originalProduct?.harga) || (parseInt(subtotal) / parseInt(quantity)) || 0;
         
         res.render('checkout/thankyou', {
             invoiceNumber,
             productName,
             quantity: parseInt(quantity),
+            harga: harga,
             subtotal: parseInt(subtotal),
             discount: parseInt(discount) || 0,
             totalPrice: parseInt(totalPrice),
             user: req.session.user,
             whatsapp: whatsapp,
-            orderId: apiResponse.data.data?.order_id
+            orderId: apiData.order_id,
+            generatedPassword: apiData.generated_password || null,
+            generatedEmail: apiData.generated_email || null
         });
     } catch (error) {
         console.error('Payment processing error:', error);
@@ -152,7 +157,8 @@ const processBankPayment = async (req, res) => {
             });
         }
 
-        const invoiceNumber = apiResponse.data.data?.invoice || '';
+        const apiData = apiResponse.data.data || {};
+        const invoiceNumber = apiData.invoice || '';
 
         // Payment deadline: 24 hours from now
         const deadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -160,20 +166,25 @@ const processBankPayment = async (req, res) => {
             day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
         });
 
+        const harga = parseInt(subtotal) / parseInt(quantity) || 0;
+
         res.json({
             status: 'success',
             data: {
                 invoiceNumber,
                 productName,
                 quantity: parseInt(quantity),
+                harga: harga,
                 subtotal: parseInt(subtotal),
                 discount: parseInt(discount) || 0,
                 totalPrice: parseInt(totalPrice),
-                orderId: apiResponse.data.data?.order_id,
-                bankName: bankName || 'Bank Jago',
-                bankAccount: bankAccount || '1234567890',
-                bankOwner: bankOwner || 'PT. Star Frost',
-                paymentDeadline: deadlineStr
+                orderId: apiData.order_id,
+                bankName: apiData.bank_name || bankName || 'Jago Syariah',
+                bankAccount: apiData.bank_account || bankAccount || '1234567890123456',
+                bankOwner: apiData.bank_owner || bankOwner || 'Muhammad Faris',
+                paymentDeadline: deadlineStr,
+                generatedPassword: apiData.generated_password || null,
+                generatedEmail: apiData.generated_email || null
             }
         });
     } catch (error) {
