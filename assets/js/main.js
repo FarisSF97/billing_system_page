@@ -18,6 +18,7 @@ const summaryTotal = document.getElementById("summary-total");
 
 // Store current product data and upsell information
 let currentBasePrice = 0;
+let originalBasePrice = 0;
 let currentPlan = "";
 let currentDiscount = 0;
 let isLifetime = false;
@@ -165,6 +166,7 @@ function attachProductCardListeners() {
 
         currentPlan = product.nama || '';
         currentBasePrice = parseInt(product.harga) || 0;
+        originalBasePrice = currentBasePrice;
         currentProductData = product;
 
         currentLifetimeSlug = product.slug ? product.slug.replace('1tahun', 'lifetime') : null;
@@ -268,7 +270,7 @@ async function updateTotalPrice() {
 
   const couponCode = summaryCouponInput ? summaryCouponInput.value.trim() : '';
   if (couponCode) {
-    await applyCoupon(couponCode);
+    await applyCoupon(couponCode, basePrice);
   } else {
     currentDiscount = 0;
   }
@@ -300,9 +302,10 @@ function updateSummarySection(subtotal, discount, total) {
   }
 }
 
-async function applyCoupon(couponCode) {
+async function applyCoupon(couponCode, basePriceOverride) {
   const quantity = (summaryQuantityInput ? parseInt(summaryQuantityInput.value) : 1) || 1;
-  const subtotal = currentBasePrice * quantity;
+  const basePrice = basePriceOverride || currentBasePrice;
+  const subtotal = basePrice * quantity;
 
   if (!couponCode || couponCode.trim() === '') {
     currentDiscount = 0;
@@ -357,9 +360,10 @@ if (summaryQuantityInput) {
 }
 
 if (summaryCouponInput) {
-  summaryCouponInput.addEventListener("input", (e) => {
+  summaryCouponInput.addEventListener("input", async (e) => {
     const quantity = (summaryQuantityInput ? parseInt(summaryQuantityInput.value) : 1) || 1;
-    const subtotal = currentBasePrice * quantity;
+    const { basePrice } = await fetchLifetimeProduct();
+    const subtotal = basePrice * quantity;
     currentDiscount = 0;
     updateSummarySection(subtotal, 0, subtotal);
     if (payButton) {
@@ -367,14 +371,16 @@ if (summaryCouponInput) {
     }
   });
 
-  summaryCouponInput.addEventListener("blur", (e) => {
-    applyCoupon(e.target.value);
+  summaryCouponInput.addEventListener("blur", async (e) => {
+    const { basePrice } = await fetchLifetimeProduct();
+    await applyCoupon(e.target.value, basePrice);
   });
 
-  summaryCouponInput.addEventListener("keydown", (e) => {
+  summaryCouponInput.addEventListener("keydown", async (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      applyCoupon(e.target.value);
+      const { basePrice } = await fetchLifetimeProduct();
+      await applyCoupon(e.target.value, basePrice);
     }
   });
 }
@@ -383,6 +389,15 @@ const lifetimeToggle = document.getElementById("lifetime-toggle");
 if (lifetimeToggle) {
   lifetimeToggle.addEventListener("change", async (e) => {
     isLifetime = e.target.checked;
+
+    if (isLifetime && currentLifetimeSlug) {
+      const { basePrice, displayPlan } = await fetchLifetimeProduct();
+      currentBasePrice = basePrice;
+      currentPlan = displayPlan;
+    } else if (!isLifetime) {
+      currentBasePrice = originalBasePrice;
+    }
+
     await updateTotalPrice();
   });
 }
