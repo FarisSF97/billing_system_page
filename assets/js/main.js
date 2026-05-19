@@ -270,7 +270,11 @@ async function updateTotalPrice() {
   const quantityInput = document.getElementById("quantity") || summaryQuantityInput;
   const quantity = quantityInput ? (parseInt(quantityInput.value) || 1) : 1;
 
-  const { basePrice, displayPlan } = await fetchLifetimeProduct();
+  const { basePrice, displayPlan, product } = await fetchLifetimeProduct();
+
+  if (isLifetime && product) {
+    currentProductData = product;
+  }
 
   const couponCode = summaryCouponInput ? summaryCouponInput.value.trim() : '';
   if (couponCode) {
