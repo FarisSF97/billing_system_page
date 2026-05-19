@@ -14,6 +14,7 @@ const summaryQuantityInput = document.getElementById("summary-quantity");
 const summaryCouponInput = document.getElementById("summary-coupon");
 const summarySubtotal = document.getElementById("summary-subtotal");
 const summaryDiscount = document.getElementById("summary-discount");
+const summaryKodeUnik = document.getElementById("summary-kodeunik");
 const summaryTotal = document.getElementById("summary-total");
 
 // Store current product data and upsell information
@@ -24,13 +25,14 @@ let currentDiscount = 0;
 let isLifetime = false;
 let currentLifetimeSlug = null;
 let currentProductData = null;
+let originalProductData = null;
 
 // API Base URL
 const API_BASE_URL = 'http://localhost:5100';
 
 async function fetchLifetimeProduct() {
   if (!isLifetime || !currentLifetimeSlug) {
-    return { basePrice: currentBasePrice, displayPlan: currentPlan };
+    return { basePrice: currentBasePrice, displayPlan: currentPlan, product: currentProductData };
   }
 
   try {
@@ -40,14 +42,15 @@ async function fetchLifetimeProduct() {
       const lifetimeProduct = lifetimeData.data[0];
       return {
         basePrice: parseInt(lifetimeProduct.harga) || currentBasePrice,
-        displayPlan: lifetimeProduct.nama || currentPlan
+        displayPlan: lifetimeProduct.nama || currentPlan,
+        product: lifetimeProduct
       };
     }
   } catch (error) {
     console.error('Error fetching lifetime product:', error);
   }
 
-  return { basePrice: currentBasePrice, displayPlan: currentPlan };
+  return { basePrice: currentBasePrice, displayPlan: currentPlan, product: null };
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -168,6 +171,7 @@ function attachProductCardListeners() {
         currentBasePrice = parseInt(product.harga) || 0;
         originalBasePrice = currentBasePrice;
         currentProductData = product;
+        originalProductData = product;
 
         currentLifetimeSlug = product.slug ? product.slug.replace('1tahun', 'lifetime') : null;
 
@@ -275,8 +279,9 @@ async function updateTotalPrice() {
     currentDiscount = 0;
   }
 
+  const kodeUnik = getCurrentKodeUnik();
   const totalPrice = basePrice * quantity;
-  const finalPrice = totalPrice - currentDiscount;
+  const finalPrice = totalPrice - currentDiscount - kodeUnik;
 
   const formattedPrice = finalPrice.toLocaleString('id-ID');
   if (payButton) {
@@ -287,15 +292,22 @@ async function updateTotalPrice() {
     modalTitle.textContent = displayPlan;
   }
 
-  updateSummarySection(totalPrice, currentDiscount, finalPrice);
+  updateSummarySection(totalPrice, currentDiscount, kodeUnik, finalPrice);
 }
 
-function updateSummarySection(subtotal, discount, total) {
+function getCurrentKodeUnik() {
+  return (currentProductData && currentProductData.kode_unik) ? parseInt(currentProductData.kode_unik) : 0;
+}
+
+function updateSummarySection(subtotal, discount, kodeUnik, total) {
   if (summarySubtotal) {
     summarySubtotal.textContent = `Rp${subtotal.toLocaleString('id-ID')}`;
   }
   if (summaryDiscount) {
     summaryDiscount.textContent = `-Rp${discount.toLocaleString('id-ID')}`;
+  }
+  if (summaryKodeUnik) {
+    summaryKodeUnik.textContent = `-Rp${kodeUnik.toLocaleString('id-ID')}`;
   }
   if (summaryTotal) {
     summaryTotal.textContent = `Rp${total.toLocaleString('id-ID')}`;
@@ -307,11 +319,14 @@ async function applyCoupon(couponCode, basePriceOverride) {
   const basePrice = basePriceOverride || currentBasePrice;
   const subtotal = basePrice * quantity;
 
+  const kodeUnik = getCurrentKodeUnik();
+
   if (!couponCode || couponCode.trim() === '') {
     currentDiscount = 0;
-    updateSummarySection(subtotal, 0, subtotal);
+    const finalPrice = subtotal - kodeUnik;
+    updateSummarySection(subtotal, 0, kodeUnik, finalPrice);
     if (payButton) {
-      payButton.textContent = `Bayar Rp${subtotal.toLocaleString('id-ID')}`;
+      payButton.textContent = `Bayar Rp${finalPrice.toLocaleString('id-ID')}`;
     }
     return;
   }
@@ -331,16 +346,16 @@ async function applyCoupon(couponCode, basePriceOverride) {
       currentDiscount = 0;
     }
 
-    const finalPrice = subtotal - currentDiscount;
-    updateSummarySection(subtotal, currentDiscount, finalPrice);
+    const finalPrice = subtotal - currentDiscount - kodeUnik;
+    updateSummarySection(subtotal, currentDiscount, kodeUnik, finalPrice);
     if (payButton) {
       payButton.textContent = `Bayar Rp${finalPrice.toLocaleString('id-ID')}`;
     }
   } catch (error) {
     console.error('Coupon validation error:', error);
     currentDiscount = 0;
-    const finalPrice = subtotal;
-    updateSummarySection(subtotal, 0, finalPrice);
+    const finalPrice = subtotal - kodeUnik;
+    updateSummarySection(subtotal, 0, kodeUnik, finalPrice);
     if (payButton) {
       payButton.textContent = `Bayar Rp${finalPrice.toLocaleString('id-ID')}`;
     }
@@ -363,11 +378,13 @@ if (summaryCouponInput) {
   summaryCouponInput.addEventListener("input", async (e) => {
     const quantity = (summaryQuantityInput ? parseInt(summaryQuantityInput.value) : 1) || 1;
     const { basePrice } = await fetchLifetimeProduct();
+    const kodeUnik = getCurrentKodeUnik();
     const subtotal = basePrice * quantity;
+    const finalPrice = subtotal - kodeUnik;
     currentDiscount = 0;
-    updateSummarySection(subtotal, 0, subtotal);
+    updateSummarySection(subtotal, 0, kodeUnik, finalPrice);
     if (payButton) {
-      payButton.textContent = `Bayar Rp${subtotal.toLocaleString('id-ID')}`;
+      payButton.textContent = `Bayar Rp${finalPrice.toLocaleString('id-ID')}`;
     }
   });
 
@@ -391,11 +408,13 @@ if (lifetimeToggle) {
     isLifetime = e.target.checked;
 
     if (isLifetime && currentLifetimeSlug) {
-      const { basePrice, displayPlan } = await fetchLifetimeProduct();
+      const { basePrice, displayPlan, product } = await fetchLifetimeProduct();
       currentBasePrice = basePrice;
       currentPlan = displayPlan;
+      if (product) currentProductData = product;
     } else if (!isLifetime) {
       currentBasePrice = originalBasePrice;
+      if (originalProductData) currentProductData = originalProductData;
     }
 
     await updateTotalPrice();
@@ -663,8 +682,9 @@ if (payButton) {
 
     const { basePrice, displayPlan } = await fetchLifetimeProduct();
 
+    const kodeUnik = getCurrentKodeUnik();
     const subtotal = basePrice * quantity;
-    const finalPrice = subtotal - currentDiscount;
+    const finalPrice = subtotal - currentDiscount - kodeUnik;
 
     const expiryClean = expiryForValidation || '';
 
@@ -732,8 +752,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!whatsapp) { alert('Silakan isi nomor WhatsApp'); return; }
 
       const { basePrice, displayPlan } = await fetchLifetimeProduct();
+      const kodeUnik = getCurrentKodeUnik();
       const subtotal = basePrice * quantity;
-      const finalPrice = subtotal - currentDiscount;
+      const finalPrice = subtotal - currentDiscount - kodeUnik;
       const productSlug = isLifetime && currentLifetimeSlug ? currentLifetimeSlug : currentProductData?.slug;
 
       const span = this.querySelector('span');

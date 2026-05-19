@@ -141,6 +141,10 @@
               <span>Rp<span id="hargaDisplay"><%= typeof harga !== 'undefined' ? harga.toLocaleString('id-ID') : '' %></span></span>
             </div>
             <div class="summary-row">
+              <span>Kode Unik:</span>
+              <span>-Rp<span id="kodeUnikDisplay"><%= typeof kodeUnik !== 'undefined' ? kodeUnik.toLocaleString('id-ID') : '0' %></span></span>
+            </div>
+            <div class="summary-row">
               <span>Jumlah:</span>
               <span id="quantityDisplay"><%= typeof quantity !== 'undefined' ? quantity : '' %></span>
             </div>
@@ -220,6 +224,7 @@
           document.getElementById('invoiceDisplay').textContent = 'Invoice #' + (data.invoiceNumber || '');
           document.getElementById('productNameDisplay').textContent = data.productName || '';
           document.getElementById('hargaDisplay').textContent = (data.harga || 0).toLocaleString('id-ID');
+          document.getElementById('kodeUnikDisplay').textContent = (data.kodeUnik || 0).toLocaleString('id-ID');
           document.getElementById('quantityDisplay').textContent = data.quantity || '';
           document.getElementById('subtotalDisplay').textContent = (data.subtotal || 0).toLocaleString('id-ID');
           document.getElementById('discountDisplay').textContent = (data.discount || 0).toLocaleString('id-ID');
