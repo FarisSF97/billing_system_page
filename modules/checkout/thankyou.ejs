@@ -141,10 +141,6 @@
               <span>Rp<span id="hargaDisplay"><%= typeof harga !== 'undefined' ? harga.toLocaleString('id-ID') : '' %></span></span>
             </div>
             <div class="summary-row">
-              <span>Kode Unik:</span>
-              <span>-Rp<span id="kodeUnikDisplay"><%= typeof kodeUnik !== 'undefined' ? kodeUnik.toLocaleString('id-ID') : '0' %></span></span>
-            </div>
-            <div class="summary-row">
               <span>Jumlah:</span>
               <span id="quantityDisplay"><%= typeof quantity !== 'undefined' ? quantity : '' %></span>
             </div>
@@ -158,6 +154,10 @@
             <div class="summary-row">
               <span>Diskon:</span>
               <span>-Rp<span id="discountDisplay"><%= typeof discount !== 'undefined' ? discount.toLocaleString('id-ID') : '' %></span></span>
+            </div>
+            <div class="summary-row">
+              <span>Kode Unik:</span>
+              <span>-Rp<span id="kodeUnikDisplay"><%= typeof kodeUnik !== 'undefined' ? kodeUnik.toLocaleString('id-ID') : '0' %></span></span>
             </div>
             <div class="summary-row total highlight">
               <span>Total:</span>
