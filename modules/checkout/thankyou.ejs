@@ -38,20 +38,19 @@
         font-size: 14px; color: #7f8c8d; background: white;
         padding: 8px 16px; border-radius: 20px; border: 1px solid #dee2e6;
       }
-      .order-item {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px;
+      .detail-row {
+        display: flex; padding: 8px 0; border-bottom: 1px solid #e9ecef;
       }
-      .item-info { flex: 1; }
-      .item-name { font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
-      .item-quantity { color: #7f8c8d; font-size: 14px; }
-      .item-price { font-weight: bold; color: #27ae60; font-size: 18px; }
+      .item-info { margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; }
       .summary-row {
         display: flex; justify-content: space-between; margin-bottom: 10px;
       }
       .summary-row.total {
         font-weight: bold; font-size: 18px; color: #2c3e50;
         padding-top: 10px; border-top: 2px solid #dee2e6;
+      }
+      .summary-row.total.highlight {
+        font-size: 22px; color: #27ae60;
       }
       .summary-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #dee2e6; }
 
@@ -88,6 +87,23 @@
       .copy-btn:hover { background: #bf360c; }
       .copy-btn.copied { background: #27ae60; }
 
+      .credentials-box {
+        background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;
+        padding: 24px; margin-bottom: 30px; text-align: left;
+      }
+      .credentials-title {
+        font-size: 16px; font-weight: 600; color: #856404;
+        margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+      }
+      .credentials-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 0; border-bottom: 1px solid #ffe082;
+      }
+      .credentials-row:last-child { border-bottom: none; }
+      .credentials-label { color: #795548; font-size: 14px; }
+      .credentials-value { font-weight: 600; color: #333; font-size: 15px; font-family: monospace; }
+      .credentials-note { font-size: 12px; color: #856404; margin-top: 12px; }
+
       .back-btn {
         background: #3498db; color: white; padding: 12px 30px;
         border: none; border-radius: 6px; font-size: 16px; cursor: pointer;
@@ -105,7 +121,7 @@
         </div>
 
         <h1 class="success-title">Terima kasih!</h1>
-        <p class="success-subtitle">Pesanan Anda telah tercatat</p>
+        <p class="success-subtitle">Pesanan Anda Sudah Kami Terima</p>
 
         <div class="order-details">
           <div class="order-header">
@@ -115,18 +131,23 @@
             </div>
           </div>
 
-          <div class="order-item">
-            <div class="item-info">
-              <div class="item-name" id="productNameDisplay">
-                <%= typeof productName !== 'undefined' ? productName : '' %>
-              </div>
-              <div class="item-quantity">Jumlah: <span id="quantityDisplay"><%= typeof quantity !== 'undefined' ? quantity : '' %></span></div>
+          <div class="item-info">
+            <div class="summary-row">
+              <span>Produk:</span>
+              <span id="productNameDisplay"><%= typeof productName !== 'undefined' ? productName : '' %></span>
             </div>
-            <div class="item-price">Rp<span id="totalDisplay"><%= typeof totalPrice !== 'undefined' ? totalPrice.toLocaleString('id-ID') : '' %></span></div>
+            <div class="summary-row">
+              <span>Harga:</span>
+              <span>Rp<span id="hargaDisplay"><%= typeof harga !== 'undefined' ? harga.toLocaleString('id-ID') : '' %></span></span>
+            </div>
+            <div class="summary-row">
+              <span>Jumlah:</span>
+              <span id="quantityDisplay"><%= typeof quantity !== 'undefined' ? quantity : '' %></span>
+            </div>
           </div>
 
           <div class="summary-section">
-            <div class="summary-row">
+            <div class="summary-row" id="subtotalRow">
               <span>Subtotal:</span>
               <span>Rp<span id="subtotalDisplay"><%= typeof subtotal !== 'undefined' ? subtotal.toLocaleString('id-ID') : '' %></span></span>
             </div>
@@ -134,11 +155,30 @@
               <span>Diskon:</span>
               <span>-Rp<span id="discountDisplay"><%= typeof discount !== 'undefined' ? discount.toLocaleString('id-ID') : '' %></span></span>
             </div>
-            <div class="summary-row total">
-              <span>Total Bayar:</span>
+            <div class="summary-row">
+              <span>Kode Unik:</span>
+              <span>-Rp<span id="kodeUnikDisplay"><%= typeof kodeUnik !== 'undefined' ? kodeUnik.toLocaleString('id-ID') : '0' %></span></span>
+            </div>
+            <div class="summary-row total highlight">
+              <span>Total:</span>
               <span>Rp<span id="finalTotalDisplay"><%= typeof totalPrice !== 'undefined' ? totalPrice.toLocaleString('id-ID') : '' %></span></span>
             </div>
           </div>
+        </div>
+
+        <div class="credentials-box" id="credentialsSection" style="display: none;">
+          <div class="credentials-title">
+            <i class="fas fa-user-lock"></i> Akun Anda
+          </div>
+          <div class="credentials-row">
+            <span class="credentials-label">Email</span>
+            <span class="credentials-value" id="credentialsEmail">-</span>
+          </div>
+          <div class="credentials-row">
+            <span class="credentials-label">Password</span>
+            <span class="credentials-value" id="credentialsPassword">-</span>
+          </div>
+          <p class="credentials-note">Harap simpan credentials akun Anda. Anda bisa login di website.</p>
         </div>
 
         <div class="bank-payment" id="bankPaymentSection" style="display: none;">
@@ -183,13 +223,21 @@
         if (data) {
           document.getElementById('invoiceDisplay').textContent = 'Invoice #' + (data.invoiceNumber || '');
           document.getElementById('productNameDisplay').textContent = data.productName || '';
+          document.getElementById('hargaDisplay').textContent = (data.harga || 0).toLocaleString('id-ID');
+          document.getElementById('kodeUnikDisplay').textContent = (data.kodeUnik || 0).toLocaleString('id-ID');
           document.getElementById('quantityDisplay').textContent = data.quantity || '';
           document.getElementById('subtotalDisplay').textContent = (data.subtotal || 0).toLocaleString('id-ID');
           document.getElementById('discountDisplay').textContent = (data.discount || 0).toLocaleString('id-ID');
-          document.getElementById('totalDisplay').textContent = (data.totalPrice || 0).toLocaleString('id-ID');
           document.getElementById('finalTotalDisplay').textContent = (data.totalPrice || 0).toLocaleString('id-ID');
 
-          document.getElementById('bankNameDisplay').textContent = data.bankName || 'Bank Jago';
+          // Show credentials section if generated
+          if (data.generatedPassword) {
+            document.getElementById('credentialsEmail').textContent = data.generatedEmail || '-';
+            document.getElementById('credentialsPassword').textContent = data.generatedPassword;
+            document.getElementById('credentialsSection').style.display = 'block';
+          }
+
+          document.getElementById('bankNameDisplay').textContent = data.bankName || 'Jago Syariah';
           document.getElementById('bankAccountDisplay').childNodes[0].textContent = data.bankAccount || '-';
           document.getElementById('bankOwnerDisplay').textContent = data.bankOwner || '-';
           document.getElementById('deadlineDisplay').textContent = data.paymentDeadline || '-';

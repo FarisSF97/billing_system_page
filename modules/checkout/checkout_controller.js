@@ -67,24 +67,24 @@ const processPayment = async (req, res) => {
             });
         }
         
-        const now = new Date();
-        const dateStr = now.getFullYear().toString() + 
-                       (now.getMonth() + 1).toString().padStart(2, '0') + 
-                       now.getDate().toString().padStart(2, '0');
-        const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        const orderNumber = apiResponse.data.data?.order_id || Math.floor(Math.random() * 999) + 1;
-        const invoiceNumber = `INV-${dateStr}-${randomSuffix}-${orderNumber.toString().padStart(3, '0')}`;
+        const apiData = apiResponse.data.data || {};
+        const invoiceNumber = apiData.invoice || '';
+        const harga = parseInt(originalProduct?.harga) || (parseInt(subtotal) / parseInt(quantity)) || 0;
         
         res.render('checkout/thankyou', {
             invoiceNumber,
             productName,
             quantity: parseInt(quantity),
+            harga: harga,
             subtotal: parseInt(subtotal),
             discount: parseInt(discount) || 0,
             totalPrice: parseInt(totalPrice),
+            kodeUnik: apiData.kode_unik || 0,
             user: req.session.user,
             whatsapp: whatsapp,
-            orderId: apiResponse.data.data?.order_id
+            orderId: apiData.order_id,
+            generatedPassword: apiData.generated_password || null,
+            generatedEmail: apiData.generated_email || null
         });
     } catch (error) {
         console.error('Payment processing error:', error);
@@ -158,19 +158,16 @@ const processBankPayment = async (req, res) => {
             });
         }
 
-        const now = new Date();
-        const dateStr = now.getFullYear().toString() +
-                       (now.getMonth() + 1).toString().padStart(2, '0') +
-                       now.getDate().toString().padStart(2, '0');
-        const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        const orderNumber = apiResponse.data.data?.order_id || Math.floor(Math.random() * 999) + 1;
-        const invoiceNumber = `INV-${dateStr}-${randomSuffix}-${orderNumber.toString().padStart(3, '0')}`;
+        const apiData = apiResponse.data.data || {};
+        const invoiceNumber = apiData.invoice || '';
 
         // Payment deadline: 24 hours from now
-        const deadline = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const deadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
         const deadlineStr = deadline.toLocaleDateString('id-ID', {
             day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
         });
+
+        const harga = parseInt(subtotal) / parseInt(quantity) || 0;
 
         res.json({
             status: 'success',
@@ -178,14 +175,18 @@ const processBankPayment = async (req, res) => {
                 invoiceNumber,
                 productName,
                 quantity: parseInt(quantity),
+                harga: harga,
                 subtotal: parseInt(subtotal),
                 discount: parseInt(discount) || 0,
                 totalPrice: parseInt(totalPrice),
-                orderId: apiResponse.data.data?.order_id,
-                bankName: bankName || 'Bank Jago',
-                bankAccount: bankAccount || '1234567890',
-                bankOwner: bankOwner || 'PT. Star Frost',
-                paymentDeadline: deadlineStr
+                kodeUnik: apiData.kode_unik || 0,
+                orderId: apiData.order_id,
+                bankName: apiData.bank_name || bankName || 'Jago Syariah',
+                bankAccount: apiData.bank_account || bankAccount || '1234567890123456',
+                bankOwner: apiData.bank_owner || bankOwner || 'Muhammad Faris',
+                paymentDeadline: deadlineStr,
+                generatedPassword: apiData.generated_password || null,
+                generatedEmail: apiData.generated_email || null
             }
         });
     } catch (error) {

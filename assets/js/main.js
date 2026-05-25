@@ -14,22 +14,26 @@ const summaryQuantityInput = document.getElementById("summary-quantity");
 const summaryCouponInput = document.getElementById("summary-coupon");
 const summarySubtotal = document.getElementById("summary-subtotal");
 const summaryDiscount = document.getElementById("summary-discount");
+const summaryKodeUnik = document.getElementById("summary-kodeunik");
 const summaryTotal = document.getElementById("summary-total");
 
 // Store current product data and upsell information
 let currentBasePrice = 0;
+let originalBasePrice = 0;
 let currentPlan = "";
 let currentDiscount = 0;
 let isLifetime = false;
 let currentLifetimeSlug = null;
 let currentProductData = null;
+let originalProductData = null;
+let selectedPaymentMethod = null;
 
 // API Base URL
 const API_BASE_URL = 'http://localhost:5100';
 
 async function fetchLifetimeProduct() {
   if (!isLifetime || !currentLifetimeSlug) {
-    return { basePrice: currentBasePrice, displayPlan: currentPlan };
+    return { basePrice: currentBasePrice, displayPlan: currentPlan, product: currentProductData };
   }
 
   try {
@@ -39,14 +43,15 @@ async function fetchLifetimeProduct() {
       const lifetimeProduct = lifetimeData.data[0];
       return {
         basePrice: parseInt(lifetimeProduct.harga) || currentBasePrice,
-        displayPlan: lifetimeProduct.nama || currentPlan
+        displayPlan: lifetimeProduct.nama || currentPlan,
+        product: lifetimeProduct
       };
     }
   } catch (error) {
     console.error('Error fetching lifetime product:', error);
   }
 
-  return { basePrice: currentBasePrice, displayPlan: currentPlan };
+  return { basePrice: currentBasePrice, displayPlan: currentPlan, product: null };
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -165,7 +170,9 @@ function attachProductCardListeners() {
 
         currentPlan = product.nama || '';
         currentBasePrice = parseInt(product.harga) || 0;
+        originalBasePrice = currentBasePrice;
         currentProductData = product;
+        originalProductData = product;
 
         currentLifetimeSlug = product.slug ? product.slug.replace('1tahun', 'lifetime') : null;
 
@@ -187,6 +194,7 @@ function attachProductCardListeners() {
 
         await updateTotalPrice();
 
+        resetPaymentSelection();
         modalOverlay.style.display = "flex";
 
       } catch (error) {
@@ -264,10 +272,22 @@ async function updateTotalPrice() {
   const quantityInput = document.getElementById("quantity") || summaryQuantityInput;
   const quantity = quantityInput ? (parseInt(quantityInput.value) || 1) : 1;
 
-  const { basePrice, displayPlan } = await fetchLifetimeProduct();
+  const { basePrice, displayPlan, product } = await fetchLifetimeProduct();
 
+  if (isLifetime && product) {
+    currentProductData = product;
+  }
+
+  const couponCode = summaryCouponInput ? summaryCouponInput.value.trim() : '';
+  if (couponCode) {
+    await applyCoupon(couponCode, basePrice);
+  } else {
+    currentDiscount = 0;
+  }
+
+  const kodeUnik = getCurrentKodeUnik();
   const totalPrice = basePrice * quantity;
-  const finalPrice = totalPrice - currentDiscount;
+  const finalPrice = totalPrice - currentDiscount - kodeUnik;
 
   const formattedPrice = finalPrice.toLocaleString('id-ID');
   if (payButton) {
@@ -278,30 +298,63 @@ async function updateTotalPrice() {
     modalTitle.textContent = displayPlan;
   }
 
-  updateSummarySection(totalPrice, currentDiscount, finalPrice);
+  updateSummarySection(totalPrice, currentDiscount, kodeUnik, finalPrice);
 }
 
-function updateSummarySection(subtotal, discount, total) {
+function getCurrentKodeUnik() {
+  return (currentProductData && currentProductData.kode_unik) ? parseInt(currentProductData.kode_unik) : 0;
+}
+
+function updateSummarySection(subtotal, discount, kodeUnik, total) {
   if (summarySubtotal) {
     summarySubtotal.textContent = `Rp${subtotal.toLocaleString('id-ID')}`;
   }
   if (summaryDiscount) {
     summaryDiscount.textContent = `-Rp${discount.toLocaleString('id-ID')}`;
   }
+  if (summaryKodeUnik) {
+    summaryKodeUnik.textContent = `-Rp${kodeUnik.toLocaleString('id-ID')}`;
+  }
   if (summaryTotal) {
     summaryTotal.textContent = `Rp${total.toLocaleString('id-ID')}`;
   }
 }
 
-async function applyCoupon(couponCode) {
+function updatePayButtonState() {
+  const checked = document.getElementById('termsCheckbox')?.checked || false;
+  if (selectedPaymentMethod && checked) {
+    payButton.disabled = false;
+    const totalEl = document.getElementById('summary-total');
+    payButton.textContent = `Bayar ${totalEl ? totalEl.textContent : 'Rp0'}`;
+  } else {
+    payButton.disabled = true;
+    payButton.textContent = !selectedPaymentMethod
+      ? 'Pilih metode pembayaran'
+      : 'Setujui syarat & ketentuan';
+  }
+}
+
+function resetPaymentSelection() {
+  selectedPaymentMethod = null;
+  document.querySelectorAll('.pm-item').forEach(el => el.classList.remove('selected'));
+  const checkbox = document.getElementById('termsCheckbox');
+  if (checkbox) checkbox.checked = false;
+  updatePayButtonState();
+}
+
+async function applyCoupon(couponCode, basePriceOverride) {
   const quantity = (summaryQuantityInput ? parseInt(summaryQuantityInput.value) : 1) || 1;
-  const subtotal = currentBasePrice * quantity;
+  const basePrice = basePriceOverride || currentBasePrice;
+  const subtotal = basePrice * quantity;
+
+  const kodeUnik = getCurrentKodeUnik();
 
   if (!couponCode || couponCode.trim() === '') {
     currentDiscount = 0;
-    updateSummarySection(subtotal, 0, subtotal);
+    const finalPrice = subtotal - kodeUnik;
+    updateSummarySection(subtotal, 0, kodeUnik, finalPrice);
     if (payButton) {
-      payButton.textContent = `Bayar Rp${subtotal.toLocaleString('id-ID')}`;
+      payButton.textContent = `Bayar Rp${finalPrice.toLocaleString('id-ID')}`;
     }
     return;
   }
@@ -321,16 +374,16 @@ async function applyCoupon(couponCode) {
       currentDiscount = 0;
     }
 
-    const finalPrice = subtotal - currentDiscount;
-    updateSummarySection(subtotal, currentDiscount, finalPrice);
+    const finalPrice = subtotal - currentDiscount - kodeUnik;
+    updateSummarySection(subtotal, currentDiscount, kodeUnik, finalPrice);
     if (payButton) {
       payButton.textContent = `Bayar Rp${finalPrice.toLocaleString('id-ID')}`;
     }
   } catch (error) {
     console.error('Coupon validation error:', error);
     currentDiscount = 0;
-    const finalPrice = subtotal;
-    updateSummarySection(subtotal, 0, finalPrice);
+    const finalPrice = subtotal - kodeUnik;
+    updateSummarySection(subtotal, 0, kodeUnik, finalPrice);
     if (payButton) {
       payButton.textContent = `Bayar Rp${finalPrice.toLocaleString('id-ID')}`;
     }
@@ -350,24 +403,29 @@ if (summaryQuantityInput) {
 }
 
 if (summaryCouponInput) {
-  summaryCouponInput.addEventListener("input", (e) => {
+  summaryCouponInput.addEventListener("input", async (e) => {
     const quantity = (summaryQuantityInput ? parseInt(summaryQuantityInput.value) : 1) || 1;
-    const subtotal = currentBasePrice * quantity;
+    const { basePrice } = await fetchLifetimeProduct();
+    const kodeUnik = getCurrentKodeUnik();
+    const subtotal = basePrice * quantity;
+    const finalPrice = subtotal - kodeUnik;
     currentDiscount = 0;
-    updateSummarySection(subtotal, 0, subtotal);
+    updateSummarySection(subtotal, 0, kodeUnik, finalPrice);
     if (payButton) {
-      payButton.textContent = `Bayar Rp${subtotal.toLocaleString('id-ID')}`;
+      payButton.textContent = `Bayar Rp${finalPrice.toLocaleString('id-ID')}`;
     }
   });
 
-  summaryCouponInput.addEventListener("blur", (e) => {
-    applyCoupon(e.target.value);
+  summaryCouponInput.addEventListener("blur", async (e) => {
+    const { basePrice } = await fetchLifetimeProduct();
+    await applyCoupon(e.target.value, basePrice);
   });
 
-  summaryCouponInput.addEventListener("keydown", (e) => {
+  summaryCouponInput.addEventListener("keydown", async (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      applyCoupon(e.target.value);
+      const { basePrice } = await fetchLifetimeProduct();
+      await applyCoupon(e.target.value, basePrice);
     }
   });
 }
@@ -376,6 +434,17 @@ const lifetimeToggle = document.getElementById("lifetime-toggle");
 if (lifetimeToggle) {
   lifetimeToggle.addEventListener("change", async (e) => {
     isLifetime = e.target.checked;
+
+    if (isLifetime && currentLifetimeSlug) {
+      const { basePrice, displayPlan, product } = await fetchLifetimeProduct();
+      currentBasePrice = basePrice;
+      currentPlan = displayPlan;
+      if (product) currentProductData = product;
+    } else if (!isLifetime) {
+      currentBasePrice = originalBasePrice;
+      if (originalProductData) currentProductData = originalProductData;
+    }
+
     await updateTotalPrice();
   });
 }
@@ -609,158 +678,99 @@ if (payButton) {
   payButton.addEventListener("click", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById("email").value;
-    const whatsapp = document.getElementById("whatsapp").value;
-    const cardName = document.getElementById("cardName").value;
-    const cardNumber = document.getElementById("cardNumber").value;
-    const expiry = document.getElementById("expiry").value;
-    const cvc = document.getElementById("cvc").value;
-    const quantity = summaryQuantityInput ? parseInt(summaryQuantityInput.value) : 1;
+    if (!selectedPaymentMethod) return;
 
-    if (!email || !whatsapp || !cardName || !cardNumber || !expiry || !cvc) {
-      alert("Silakan lengkapi data pembayaran Anda");
-      return;
-    }
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const whatsapp = document.getElementById('whatsapp').value.trim();
 
-    const cardNumberClean = cardNumber.replace(/\s/g, "");
-    if (cardNumberClean.length !== 16) {
-      alert("Nomor kartu harus 16 digit");
-      return;
-    }
+    if (!name) { alert('Silakan isi nama Anda'); return; }
+    if (!email) { alert('Silakan isi email Anda'); return; }
+    if (!whatsapp) { alert('Silakan isi nomor WhatsApp'); return; }
 
-    const expiryForValidation = expiry.replace(/\//g, "");
-    if (expiryForValidation.length !== 4) {
-      alert("Format expiry date harus MMYY");
-      return;
-    }
-
-    if (cvc.length < 3 || cvc.length > 4) {
-      alert("Masukkan kode CVC yang valid");
-      return;
-    }
-
+    const quantity = summaryQuantityInput ? parseInt(summaryQuantityInput.value) || 1 : 1;
     const { basePrice, displayPlan } = await fetchLifetimeProduct();
-
+    const kodeUnik = getCurrentKodeUnik();
     const subtotal = basePrice * quantity;
-    const finalPrice = subtotal - currentDiscount;
-
-    const expiryClean = expiryForValidation || '';
-
+    const finalPrice = subtotal - currentDiscount - kodeUnik;
+    const productSlug = isLifetime && currentLifetimeSlug ? currentLifetimeSlug : currentProductData?.slug;
     const couponCode = summaryCouponInput ? summaryCouponInput.value.trim() : '';
 
-    const paymentData = {
-      email,
-      whatsapp,
-      cardName,
-      cardNumber: cardNumberClean,
-      expiry: expiryClean,
-      cvc,
-      productName: displayPlan,
-      quantity,
-      subtotal,
-      discount: currentDiscount,
-      totalPrice: finalPrice,
-      isLifetime: isLifetime,
-      originalProduct: currentProductData,
-      coupon: couponCode
-    };
+    payButton.textContent = "Processing...";
+    payButton.disabled = true;
 
-    try {
-      payButton.textContent = "Processing...";
-      payButton.disabled = true;
+    if (selectedPaymentMethod === 'Bank Jago') {
+      const payload = {
+        nama: name,
+        email,
+        whatsapp,
+        productSlug,
+        productName: displayPlan,
+        quantity,
+        subtotal,
+        discount: currentDiscount,
+        totalPrice: finalPrice,
+        isLifetime,
+        paymentMethod: 'bank_jago',
+        kupon: couponCode
+      };
 
-      const response = await fetch("/process_payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(paymentData),
-      });
+      try {
+        const response = await fetch('/process_bank', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-      if (response.ok) {
-        const html = await response.text();
-        document.open();
-        document.write(html);
-        document.close();
-      } else {
-        throw new Error("Payment failed");
+        const result = await response.json();
+
+        if (result.status !== 'success') {
+          alert(result.message || 'Checkout gagal');
+          payButton.textContent = 'Bayar';
+          payButton.disabled = false;
+          return;
+        }
+
+        sessionStorage.setItem('paymentResult', JSON.stringify(result.data));
+        window.location.href = '/thankyou';
+      } catch (error) {
+        console.error('Payment error:', error);
+        alert('Terjadi kesalahan. Silakan coba lagi.');
+        payButton.textContent = 'Bayar';
+        payButton.disabled = false;
       }
-    } catch (error) {
-      console.error("Payment error:", error);
-      alert("Payment failed. Please try again.");
-      payButton.textContent = `Bayar Rp${finalPrice.toLocaleString('id-ID')}`;
+    } else {
+      alert('Metode pembayaran ' + selectedPaymentMethod + ' belum tersedia. Silakan pilih Bank Jago.');
       payButton.disabled = false;
     }
   });
 }
 
-// Handle payment method item clicks (Bank Jago, QRIS, etc.)
+// Handle payment method item clicks — only select/highlight, no checkout
 document.addEventListener('DOMContentLoaded', () => {
   const pmItems = document.querySelectorAll('.pm-item');
 
   pmItems.forEach(item => {
-    item.addEventListener('click', async function () {
-      const name = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const whatsapp = document.getElementById('whatsapp').value.trim();
-      const quantity = summaryQuantityInput ? parseInt(summaryQuantityInput.value) || 1 : 1;
-
-      if (!name) { alert('Silakan isi nama Anda'); return; }
-      if (!email) { alert('Silakan isi email Anda'); return; }
-      if (!whatsapp) { alert('Silakan isi nomor WhatsApp'); return; }
-
-      const { basePrice, displayPlan } = await fetchLifetimeProduct();
-      const subtotal = basePrice * quantity;
-      const finalPrice = subtotal - currentDiscount;
-      const productSlug = isLifetime && currentLifetimeSlug ? currentLifetimeSlug : currentProductData?.slug;
-
+    item.addEventListener('click', function () {
       const span = this.querySelector('span');
-      const paymentLabel = span ? span.textContent.trim() : 'Bank Transfer';
+      const label = span ? span.textContent.trim() : '';
 
-      const couponCode = summaryCouponInput ? summaryCouponInput.value.trim() : '';
-
-      if (paymentLabel === 'Bank Jago') {
-        const payload = {
-          nama: name,
-          email,
-          whatsapp,
-          productSlug,
-          productName: displayPlan,
-          quantity,
-          subtotal,
-          discount: currentDiscount,
-          totalPrice: finalPrice,
-          isLifetime,
-          paymentMethod: 'bank_jago',
-          bankName: 'Bank Jago',
-          bankAccount: '1234567890',
-          bankOwner: 'PT. Star Frost',
-          kupon: couponCode
-        };
-
-        try {
-          const response = await fetch('/process_bank', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-
-          const result = await response.json();
-
-          if (result.status !== 'success') {
-            alert(result.message || 'Checkout gagal');
-            return;
-          }
-
-          sessionStorage.setItem('paymentResult', JSON.stringify(result.data));
-          window.location.href = '/thankyou';
-        } catch (error) {
-          console.error('Bank Jago payment error:', error);
-          alert('Terjadi kesalahan. Silakan coba lagi.');
-        }
-      } else {
-        alert('Metode pembayaran ' + paymentLabel + ' belum tersedia. Silakan pilih Bank Jago.');
+      if (this.classList.contains('selected')) {
+        this.classList.remove('selected');
+        selectedPaymentMethod = null;
+        updatePayButtonState();
+        return;
       }
+
+      pmItems.forEach(el => el.classList.remove('selected'));
+      this.classList.add('selected');
+      selectedPaymentMethod = label;
+      updatePayButtonState();
     });
   });
+
+  const termsCheckbox = document.getElementById('termsCheckbox');
+  if (termsCheckbox) {
+    termsCheckbox.addEventListener('change', updatePayButtonState);
+  }
 });
